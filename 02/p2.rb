@@ -11,7 +11,9 @@ class Game
   end
 
   def power
-    sets.inject { |m, e| m.merge(e) { |_, a, b| [a, b].max } }.values.reduce(:*)
+    @sets.inject { |m, e| m.merge(e) { |_, a, b| [a, b].max } }
+         .values
+         .reduce(:*)
   end
 end
 
