@@ -11,9 +11,9 @@ class Game
   end
 
   MAX_COUNT = {
-    red: 12,
-    green: 13,
-    blue: 14
+    'red' => 12,
+    'green' => 13,
+    'blue' => 14
   }.freeze
 
   def possible?
@@ -23,7 +23,7 @@ end
 
 def parse_cube(cube_str)
   strs = cube_str.split(' ')
-  [strs.last.to_sym, strs.first.to_i]
+  [strs.last, strs.first.to_i]
 end
 
 def parse_sets(sets_str)
