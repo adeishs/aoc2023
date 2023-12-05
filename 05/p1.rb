@@ -5,8 +5,10 @@ def parse_map(map_str)
   map_str.split(":\n")
          .pop
          .split("\n")
-         .map { |l| l.split(' ').map(&:to_i) }
-         .map { |dest, src, len| { dest: dest, src: src, len: len } }
+         .map do |l|
+           dest, src, len = l.split(' ').map(&:to_i)
+           { src_range: src...src + len, ofs: dest - src }
+         end
 end
 
 def parse_input(input_str)
@@ -17,19 +19,17 @@ def parse_input(input_str)
   }
 end
 
-def construct_maps(input)
-  input[:maps].map do |media_map|
-    Hash[*media_map.map do |mm|
-      [*0...mm[:len]].map { |i| [mm[:src] + i, mm[:dest] + i] }.flatten
-    end.flatten]
-  end
-end
-
 input = parse_input($stdin.read)
-maps = construct_maps(input)
+min_loc = input[:seeds].max
 input[:seeds].map do |loc|
-  maps.each do |m|
-    loc = m[loc] || loc
+  input[:maps].each do |media_maps|
+    media_maps.each do |m|
+      if m[:src_range].include?(loc)
+        loc += m[:ofs]
+        break
+      end
+    end
   end
-  puts loc
+  min_loc = [min_loc, loc].min
 end
+puts min_loc
