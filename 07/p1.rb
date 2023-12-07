@@ -43,8 +43,13 @@ def parse_line(line)
   }
 end
 
+def cmp_cards(a, b)
+  [a[:type_strength], a[:hand_strength]] <=>
+    [b[:type_strength], b[:hand_strength]]
+end
+
 puts $stdin.each_line
            .map { |l| parse_line(l) }
-           .sort { |a, b| [a[:type_strength], a[:hand_strength]] <=> [b[:type_strength], b[:hand_strength]] }
+           .sort { |a, b| cmp_cards(a, b) }
            .map.with_index { |hb, i| hb[:bid] * (i + 1) }
            .sum
