@@ -14,14 +14,19 @@ def parse_input(input)
   }
 end
 
+def count_steps(input, start, &finish_cond)
+  s = 0
+  curr = start
+  until finish_cond.call(curr)
+    dir = input[:insts][s % input[:insts].size]
+    curr = input[:path][curr][dir]
+    s += 1
+  end
+  s
+end
+
 input = parse_input($stdin.read)
-puts input[:path].keys.select { |n| n[-1] == 'A' }
-                 .map { |curr|
-       s = 0
-       until curr[-1] == 'Z'
-         dir = input[:insts][s % input[:insts].size]
-         curr = input[:path][curr][dir]
-         s += 1
-       end
-       s
-     }.reduce(1, :lcm)
+puts input[:path].keys
+                 .select { |n| n[-1] == 'A' }
+                 .map { |start| count_steps(input, start) { |n| n[-1] == 'Z' } }
+                 .reduce(1, :lcm)

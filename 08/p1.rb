@@ -14,12 +14,15 @@ def parse_input(input)
   }
 end
 
-input = parse_input($stdin.read)
-s = 0
-curr = 'AAA'
-until curr == 'ZZZ'
-  dir = input[:insts][s % input[:insts].size]
-  curr = input[:path][curr][dir]
-  s += 1
+def count_steps(input, start, &finish_cond)
+  s = 0
+  curr = start
+  until finish_cond.call(curr)
+    dir = input[:insts][s % input[:insts].size]
+    curr = input[:path][curr][dir]
+    s += 1
+  end
+  s
 end
-puts s
+
+puts count_steps(parse_input($stdin.read), 'AAA') { |n| n == 'ZZZ' }
