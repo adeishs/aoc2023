@@ -2,10 +2,9 @@
 # frozen_string_literal: true
 
 def get_next_val(nums)
-  u = nums.uniq
-  return u[0] if u.size == 1
+  return nums[0] if nums.uniq.size == 1
 
-  nums.last + get_next_val([*1...nums.size].map { |i| nums[i] - nums[i - 1] })
+  nums.last + get_next_val(nums.each_cons(2).map { |ns| ns[1] - ns[0] })
 end
 
 puts $stdin.each_line
