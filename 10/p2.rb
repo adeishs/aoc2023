@@ -76,31 +76,35 @@ def get_loop_coords(input)
   visited_coords
 end
 
+def junk?(pipes, x, y)
+  # if one end is closed or clear, it’s junk
+  PIPE_DIRS[pipes[y][x]].each do |pd|
+    ax = x + pd.real
+    ay = y + pd.imag
+    next if ax.between?(0, pipes[y].size - 1) &&
+            ay.between?(0, pipes.size - 1) &&
+            pipes[ay][ax] != '.' &&
+            DIR_PIPES[pd].include?(pipes[ay][ax])
+
+    return true
+  end
+
+  false
+end
+
 def clear_junk(pipes, loop_coords)
   loop do
     new_pipes = pipes.map { |py| py.map { |px| px } }
     changed = false
     [*0...pipes.size].each do |y|
       [*0...pipes[y].size].each do |x|
-        p = pipes[y][x]
-        if loop_coords.member?(Complex(x, y)) || !PIPE_DIRS[p]
-          new_pipes[y][x] = p
-          next
-        end
+        next if loop_coords.member?(Complex(x, y)) ||
+                !PIPE_DIRS[pipes[y][x]] ||
+                !junk?(pipes, x, y)
 
-        # if one end is closed or clear, it’s junk
-        PIPE_DIRS[p].each do |pd|
-          ax = x + pd.real
-          ay = y + pd.imag
-          next unless ax.negative? || ax >= pipes[y].size ||
-                      ay.negative? || ay >= pipes.size ||
-                      pipes[ay][ax] == '.' ||
-                      !DIR_PIPES[pd].include?(pipes[ay][ax])
-
-          new_pipes[y][x] = '.'
-          changed = true
-          break
-        end
+        new_pipes[y][x] = '.'
+        changed = true
+        break
       end
     end
 
@@ -115,18 +119,20 @@ SOUTH_PIPES = DIRS_PIPE.select { |dirs, _| dirs.any? { |d| d == 0 + 1i } }
 NORTH_PIPES = DIRS_PIPE.select { |dirs, _| dirs.any? { |d| d == 0 - 1i } }
                        .values
 
+def crossed?(pipes, halfpoint_coord, dir)
+  check_x = (halfpoint_coord.real + dir * 0.5).to_i
+  SOUTH_PIPES.include?(pipes[(halfpoint_coord.imag - 0.5).to_i][check_x]) &&
+    NORTH_PIPES.include?(pipes[(halfpoint_coord.imag + 0.5).to_i][check_x])
+end
+
 def inside?(pipes, halfpoint_coord)
   inside = false
   max_x = pipes[0].size
   dir = halfpoint_coord.real <=> (max_x / 2)
   wall = Complex(dir == 1 ? max_x : 0, halfpoint_coord.imag)
   c = halfpoint_coord
-  while (dir == 1 && c.real < wall.real) || (dir == -1 && wall.real < c.real)
-    check_x = (c.real + dir * 0.5).to_i
-    if SOUTH_PIPES.include?(pipes[(c.imag - 0.5).to_i][check_x]) &&
-       NORTH_PIPES.include?(pipes[(c.imag + 0.5).to_i][check_x])
-      inside = !inside
-    end
+  while dir == (wall.real <=> c.real)
+    inside = !inside if crossed?(pipes, c, dir)
     c += dir
   end
 
@@ -136,7 +142,7 @@ end
 def get_inside_halfpoints(pipes, _loop_coords)
   points = Set.new
   pipes[0...pipes.size - 1].each_with_index do |cols, y|
-    cols[0...cols.size - 1].each_with_index do |_pipe, x|
+    cols[0...cols.size - 1].each_with_index do |_, x|
       halfpoint_coord = Complex(x + 0.5, y + 0.5)
       points << halfpoint_coord if inside?(pipes, halfpoint_coord)
     end
@@ -145,18 +151,20 @@ def get_inside_halfpoints(pipes, _loop_coords)
   points
 end
 
+def all_adjacent_halfpoints?(coord, halfpoint_coords)
+  [
+    Complex(coord.real + 1, coord.imag),
+    Complex(coord.real, coord.imag + 1),
+    Complex(coord.real + 1, coord.imag)
+  ].all? { |a| halfpoint_coords.member?(a) }
+end
+
 def get_inside_coords(pipes, loop_coords)
   halfpoint_coords = get_inside_halfpoints(pipes, loop_coords)
 
-  halfpoint_coords.map do |c|
-    next unless [
-      Complex(c.real + 1, c.imag),
-      Complex(c.real, c.imag + 1),
-      Complex(c.real + 1, c.imag)
-    ].all? { |a| halfpoint_coords.member?(a) }
-
-    Complex((c.real + 0.5).to_i, (c.imag + 0.5).to_i)
-  end.reject { |c| c.nil? || loop_coords.member?(c) }
+  halfpoint_coords.select { |c| all_adjacent_halfpoints?(c, halfpoint_coords) }
+                  .map { |c| Complex((c.real + 0.5).to_i, (c.imag + 0.5).to_i) }
+                  .reject { |c| loop_coords.member?(c) }
 end
 
 input = parse_input($stdin.read)
