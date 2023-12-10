@@ -78,7 +78,8 @@ end
 
 def clear_junk(pipes, loop_coords)
   loop do
-    new_pipes = pipes.dup
+    new_pipes = pipes.map { |py| py.map { |px| px } }
+    changed = false
     [*0...pipes.size].each do |y|
       [*0...pipes[y].size].each do |x|
         p = pipes[y][x]
@@ -91,20 +92,21 @@ def clear_junk(pipes, loop_coords)
         PIPE_DIRS[p].each do |pd|
           ax = x + pd.real
           ay = y + pd.imag
-          junk = false
-          if ax.negative? || ax >= pipes[y].size ||
-             ay.negative? || ay >= pipes.size ||
-             pipes[ay][ax] == '.' ||
-             !DIR_PIPES[pd].include?(pipes[ay][ax])
-            new_pipes[y][x] = '.'
-            junk = true
-          end
-          break if junk
+          next unless ax.negative? || ax >= pipes[y].size ||
+                      ay.negative? || ay >= pipes.size ||
+                      pipes[ay][ax] == '.' ||
+                      !DIR_PIPES[pd].include?(pipes[ay][ax])
+
+          new_pipes[y][x] = '.'
+          changed = true
+          break
         end
       end
     end
 
-    return pipes if pipes == new_pipes
+    return new_pipes unless changed
+
+    pipes = new_pipes
   end
 end
 
@@ -115,7 +117,6 @@ NORTH_PIPES = DIRS_PIPE.select { |dirs, _| dirs.any? { |d| d == 0 - 1i } }
 
 def inside?(pipes, halfpoint_coord)
   inside = false
-  pipes.size
   max_x = pipes[0].size
   dir = halfpoint_coord.real <=> (max_x / 2)
   wall = Complex(dir == 1 ? max_x : 0, halfpoint_coord.imag)
