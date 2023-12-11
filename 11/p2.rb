@@ -3,7 +3,7 @@
 
 require 'set'
 
-EXP_SIZE = 1
+EXP_SIZE = 999_999
 
 def parse_input(input)
   input.split("\n").map(&:chars).map.with_index do |cols, y|
