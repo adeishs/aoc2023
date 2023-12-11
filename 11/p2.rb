@@ -4,6 +4,8 @@
 require 'set'
 
 EXP_SIZE = 999_999
+AXES = %w[real imag].freeze
+EXTREMA = %w[min max].freeze
 
 def parse_input(input)
   input.split("\n").map(&:chars).map.with_index do |cols, y|
@@ -11,22 +13,23 @@ def parse_input(input)
   end.flatten.reject(&:nil?)
 end
 
+def init_border
+  EXTREMA.map do |e|
+    [
+      e,
+      AXES.map { |a| [a, e == 'min' ? Float::INFINITY : -Float::INFINITY] }.to_h
+    ]
+  end.to_h
+end
+
 def get_universe_borders(galaxy_locs)
-  border = {
-    min: {
-      x: Float::INFINITY,
-      y: Float::INFINITY
-    },
-    max: {
-      x: -Float::INFINITY,
-      y: -Float::INFINITY
-    }
-  }
+  border = init_border
   galaxy_locs.each do |l|
-    border[:min][:x] = [l.real, border[:min][:x]].min
-    border[:min][:y] = [l.imag, border[:min][:y]].min
-    border[:max][:x] = [l.real, border[:max][:x]].max
-    border[:max][:y] = [l.imag, border[:max][:y]].max
+    border.each_key do |m|
+      border[m].each_key do |a|
+        border[m][a] = [l.send(a), border[m][a]].send(m)
+      end
+    end
   end
 
   border
@@ -34,31 +37,27 @@ end
 
 def get_universe_attrs(galaxy_locs)
   border = get_universe_borders(galaxy_locs)
-  empty_rows = [
-    *border[:min][:y] + 1..border[:max][:y] - 1
-  ].select { |y| galaxy_locs.none? { |l| l.imag == y } }.sort { |a, b| b <=> a }
-  empty_cols = [
-    *border[:min][:x] + 1..border[:max][:x] - 1
-  ].select { |x| galaxy_locs.none? { |l| l.real == x } }.sort { |a, b| b <=> a }
+  get_empty_lines = lambda { |ax|
+    s, e = EXTREMA.map { |e| border[e][ax] }
+    [*s + 1..e - 1].select { |i| galaxy_locs.none? { |l| l.send(ax) == i } }
+                   .sort { |a, b| b <=> a }
+  }
 
   {
     border: border,
-    empty_rows: empty_rows,
-    empty_cols: empty_cols
+    empty: AXES.map { |c| [c, get_empty_lines.call(c)] }.to_h
   }
 end
 
 def expand_universe(galaxy_locs)
   attr = get_universe_attrs(galaxy_locs)
-
-  attr[:empty_rows].each do |r|
-    galaxy_locs = galaxy_locs.map do |l|
-      Complex(l.real, l.imag + (l.imag > r ? EXP_SIZE : 0))
-    end
-  end
-  attr[:empty_cols].each do |c|
-    galaxy_locs = galaxy_locs.map do |l|
-      Complex(l.real + (l.real > c ? EXP_SIZE : 0), l.imag)
+  AXES.each do |c|
+    attr[:empty][c].each do |r|
+      galaxy_locs = galaxy_locs.map do |l|
+        Complex(
+          *AXES.map { |a| l.send(a) + (c == a && l.send(a) > r ? EXP_SIZE : 0) }
+        )
+      end
     end
   end
 
@@ -67,7 +66,7 @@ end
 
 def calc_dist(a, b)
   d = a - b
-  d.real.abs + d.imag.abs
+  AXES.map { |ax| d.send(ax).abs }.sum
 end
 
 puts expand_universe(parse_input($stdin.read)).combination(2)
