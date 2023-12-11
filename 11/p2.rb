@@ -35,7 +35,7 @@ def get_universe_borders(galaxy_locs)
   border
 end
 
-def get_universe_attrs(galaxy_locs)
+def get_empty_axis_lines(galaxy_locs)
   border = get_universe_borders(galaxy_locs)
   get_empty_lines = lambda { |ax|
     s, e = EXTREMA.map { |e| border[e][ax] }
@@ -43,16 +43,13 @@ def get_universe_attrs(galaxy_locs)
                    .sort { |a, b| b <=> a }
   }
 
-  {
-    border: border,
-    empty: AXES.map { |c| [c, get_empty_lines.call(c)] }.to_h
-  }
+  AXES.map { |c| [c, get_empty_lines.call(c)] }.to_h
 end
 
 def expand_universe(galaxy_locs)
-  attr = get_universe_attrs(galaxy_locs)
+  empty_lines = get_empty_axis_lines(galaxy_locs)
   AXES.each do |c|
-    attr[:empty][c].each do |r|
+    empty_lines[c].each do |r|
       galaxy_locs = galaxy_locs.map do |l|
         Complex(
           *AXES.map { |a| l.send(a) + (c == a && l.send(a) > r ? EXP_SIZE : 0) }
