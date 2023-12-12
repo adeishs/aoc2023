@@ -17,25 +17,25 @@ UNKNOWN = '?'
 OPERATIONAL = '.'
 DAMAGED = '#'
 
-def calc_possible_unfolded_count(springs, conds, conseq_count)
-  return conds.empty? && conseq_count.zero? ? 1 : 0 if springs.nil?
+def calc_possible_unfolded_count(springs, conds, consec_count)
+  return conds.empty? && consec_count.zero? ? 1 : 0 if springs.nil?
 
-  possible_count = Memo.instance.cache[[springs, conds, conseq_count]]
+  possible_count = Memo.instance.cache[[springs, conds, consec_count]]
   return possible_count unless possible_count.nil?
 
   possible_count = 0
   (springs[0] == UNKNOWN ? [OPERATIONAL, DAMAGED] : [springs[0]]).each do |c|
-    next_cond = c != DAMAGED && conseq_count.positive?
-    next if next_cond && conds.first != conseq_count
+    next_cond = c != DAMAGED && consec_count.positive?
+    next if next_cond && conds.first != consec_count
 
     possible_count += calc_possible_unfolded_count(
       springs[1..],
       conds[(next_cond ? 1 : 0)..],
-      c == DAMAGED ? conseq_count + 1 : 0
+      c == DAMAGED ? consec_count + 1 : 0
     )
   end
 
-  Memo.instance.cache[[springs, conds, conseq_count]] = possible_count
+  Memo.instance.cache[[springs, conds, consec_count]] = possible_count
   possible_count
 end
 
