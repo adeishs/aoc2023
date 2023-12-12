@@ -28,9 +28,8 @@ end
 
 def possible?(springs, conds)
   unknown_idxs = (0...springs.size).find_all { |i| springs[i] == UNKNOWN }
-  subs = [OPERATIONAL, DAMAGED].repeated_permutation(unknown_idxs.size).to_a
-
-  subs.map do |s|
+  [OPERATIONAL, DAMAGED].repeated_permutation(unknown_idxs.size)
+                        .map do |s|
     get_conds(replace_unknowns(springs, s, unknown_idxs)) == conds
   end
 end
