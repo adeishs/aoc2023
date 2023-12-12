@@ -1,16 +1,26 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
+require 'singleton'
+
+class Memo
+  include Singleton
+
+  attr_accessor :cache
+
+  def initialize
+    @cache = {}
+  end
+end
+
 UNKNOWN = '?'
 OPERATIONAL = '.'
 DAMAGED = '#'
 
-$cache = {}
-
 def calc_possible_unfolded_count(springs, conds, conseq_count)
   return conds.empty? && conseq_count.zero? ? 1 : 0 if springs.nil?
 
-  possible_count = $cache[[springs, conds, conseq_count]]
+  possible_count = Memo.instance.cache[[springs, conds, conseq_count]]
   return possible_count unless possible_count.nil?
 
   possible_count = 0
@@ -25,7 +35,7 @@ def calc_possible_unfolded_count(springs, conds, conseq_count)
     )
   end
 
-  $cache[[springs, conds, conseq_count]] = possible_count
+  Memo.instance.cache[[springs, conds, conseq_count]] = possible_count
   possible_count
 end
 
