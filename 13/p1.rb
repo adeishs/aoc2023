@@ -2,12 +2,9 @@
 # frozen_string_literal: true
 
 def find_row(rows)
-  [*0...rows.size - 1].each do |y|
-    w = [y, (y + 2 - rows.size).abs].min
-    return y + 1 if rows[y - w..y] == rows[y + 1..y + w + 1].reverse
-  end
-
-  0
+  i = [*1...rows.size].map { |y| [y, [y, rows.size - y].min] }
+                      .index { |y, w| rows[y - w, w] == rows[y, w].reverse }
+  i.nil? ? 0 : i + 1
 end
 
 def solve(rows)

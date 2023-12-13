@@ -5,7 +5,7 @@ def get_pos_chars(row)
   row.chars.map.with_index { |c, i| [i, c] }
 end
 
-def reflection?(rows_pair)
+def mirrored?(rows_pair)
   smudge_count = 0
   bs = rows_pair.last.reverse
 
@@ -19,12 +19,9 @@ def reflection?(rows_pair)
 end
 
 def find_row(rows)
-  [*0...rows.size - 1].each do |y|
-    w = [y, (y + 2 - rows.size).abs].min
-    return y + 1 if reflection?([rows[y - w..y], rows[y + 1..y + w + 1]])
-  end
-
-  0
+  i = [*1...rows.size].map { |y| [y, [y, rows.size - y].min] }
+                      .index { |y, w| mirrored?([rows[y - w, w], rows[y, w]]) }
+  i.nil? ? 0 : i + 1
 end
 
 def solve(rows)
