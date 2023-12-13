@@ -6,14 +6,16 @@ def get_pos_chars(row)
 end
 
 def reflection?(rows_pair)
-  cnt = 0
+  smudge_count = 0
   bs = rows_pair.last.reverse
+
+  # exactly one smudge must exist, so, just bail out early if more are found
   rows_pair.first.each_with_index do |a, i|
-    cnt += (get_pos_chars(a) - get_pos_chars(bs[i])).to_h.size
-    return false if cnt > 1
+    smudge_count += (get_pos_chars(a) - get_pos_chars(bs[i])).to_h.size
+    return false if smudge_count > 1
   end
 
-  cnt == 1
+  smudge_count == 1
 end
 
 def find_row(rows)
