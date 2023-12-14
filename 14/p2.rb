@@ -29,40 +29,47 @@ def get_cube_locs(rows)
   ).sort { |a, b| [a.imag, a.real] <=> [b.imag, b.real] }
 end
 
-def tilt(rows, cube_locs, dir)
+def tilt_horiz(rows, cube_locs, dir)
   new_rows = Marshal.load(Marshal.dump(rows))
-  if dir.imag != 0
-    [*0...rows[0].size].each do |x|
-      c_idxs = cube_locs.select { |l| l.real == x }.map(&:imag)
-      (1...c_idxs.size).map do |_|
-        s = c_idxs.shift + 1
-        e = c_idxs.first
-        cnt = (s...e).map { |y| rows[y][x] }.tally
-        (s...e).each do |y|
-          o = y - s
-          new_rows[y][x] = if dir.imag == - 1
-                             o < (cnt[ROUNDED] || 0) ? ROUNDED : EMPTY
-                           else
-                             o < (cnt[EMPTY] || 0) ? EMPTY : ROUNDED
-                           end
-        end
-      end
+  rocks = [ROUNDED, EMPTY]
+  rocks.rotate! if dir == 1
+  [*0...rows.size].each do |y|
+    c_idxs = cube_locs.select { |l| l.imag == y }.map(&:real)
+    (c_idxs.size - 1).times do
+      s = c_idxs.shift + 1
+      e = c_idxs.first
+      cnt = rows[y][s...e].chars.tally
+      str = rocks.map { |r| [r, r * (cnt[r] || 0)] }.to_h
+      new_rows[y][s...e] = "#{str[rocks.first]}#{str[rocks.last]}"
     end
-  else
-    rocks = [ROUNDED, EMPTY]
-    rocks.rotate! if dir.real == 1
-    [*0...rows.size].each do |y|
-      c_idxs = cube_locs.select { |l| l.imag == y }.map(&:real)
-      (1...c_idxs.size).map do |_|
-        s = c_idxs.shift + 1
-        e = c_idxs.first
-        cnt = rows[y][s...e].chars.tally
-        str = rocks.map { |r| [r, r * (cnt[r] || 0)] }.to_h
-        new_rows[y][s...e] = "#{str[rocks.first]}#{str[rocks.last]}"
+  end
+  new_rows
+end
+
+def tilt_vert(rows, cube_locs, dir)
+  new_rows = Marshal.load(Marshal.dump(rows))
+  [*0...rows[0].size].each do |x|
+    c_idxs = cube_locs.select { |l| l.real == x }.map(&:imag)
+    (c_idxs.size - 1).times do
+      s = c_idxs.shift + 1
+      e = c_idxs.first
+      cnt = (s...e).map { |y| rows[y][x] }.tally
+      (s...e).each do |y|
+        o = y - s
+        new_rows[y][x] = if dir == - 1
+                           o < (cnt[ROUNDED] || 0) ? ROUNDED : EMPTY
+                         else
+                           o < (cnt[EMPTY] || 0) ? EMPTY : ROUNDED
+                         end
       end
     end
   end
   new_rows
+end
+
+def tilt(rows, cube_locs, dir)
+  args = [rows, cube_locs, dir.real + dir.imag]
+  dir.imag.zero? ? tilt_horiz(*args) : tilt_vert(*args)
 end
 
 M = { 100 => 34, 10 => 7 }.freeze
