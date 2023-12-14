@@ -29,10 +29,17 @@ def get_cube_locs(rows)
   ).sort { |a, b| [a.imag, a.real] <=> [b.imag, b.real] }
 end
 
+def deep_clone(rows)
+  Marshal.load(Marshal.dump(rows))
+end
+
+def get_rock_order(dir)
+  [ROUNDED, EMPTY].rotate(dir == 1 ? 1 : 0)
+end
+
 def tilt_horiz(rows, cube_locs, dir)
-  new_rows = Marshal.load(Marshal.dump(rows))
-  rocks = [ROUNDED, EMPTY]
-  rocks.rotate! if dir == 1
+  new_rows = deep_clone(rows)
+  rocks = get_rock_order(dir)
   [*0...rows.size].each do |y|
     c_idxs = cube_locs.select { |l| l.imag == y }.map(&:real)
     (c_idxs.size - 1).times do
@@ -47,7 +54,8 @@ def tilt_horiz(rows, cube_locs, dir)
 end
 
 def tilt_vert(rows, cube_locs, dir)
-  new_rows = Marshal.load(Marshal.dump(rows))
+  new_rows = deep_clone(rows)
+  rocks = get_rock_order(dir)
   [*0...rows[0].size].each do |x|
     c_idxs = cube_locs.select { |l| l.real == x }.map(&:imag)
     (c_idxs.size - 1).times do
@@ -55,12 +63,8 @@ def tilt_vert(rows, cube_locs, dir)
       e = c_idxs.first
       cnt = (s...e).map { |y| rows[y][x] }.tally
       (s...e).each do |y|
-        o = y - s
-        new_rows[y][x] = if dir == - 1
-                           o < (cnt[ROUNDED] || 0) ? ROUNDED : EMPTY
-                         else
-                           o < (cnt[EMPTY] || 0) ? EMPTY : ROUNDED
-                         end
+        new_rows[y][x] =
+          y - s < (cnt[rocks.first] || 0) ? rocks.first : rocks.last
       end
     end
   end
@@ -74,11 +78,12 @@ end
 
 M = { 100 => 34, 10 => 7 }.freeze
 O = { 100 => 95, 10 => 2 }.freeze
+DIRS = (1..4).map { |p| Complex(0, -1)**p }
 def cycle_tilt(rows, cube_locs)
   o = O[rows.size] || 0
   t = 1_000_000_000
   ((t - o) % (M[rows.size] || (t + 1)) + o).times do
-    [0 + -1i, -1 + 0i, 0 + 1i, 1 + 0i].each do |dir|
+    DIRS.each do |dir|
       rows = tilt(rows, cube_locs, dir)
     end
   end
