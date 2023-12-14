@@ -23,7 +23,7 @@ def get_line_load(line)
   c_idxs = get_cube_idxs(line)
   (1...c_idxs.size).map do |i|
     s = c_idxs[i - 1] + 1
-    series_sum(line.size - s, get_series_round_count(line, s..c_idxs[i] - 1))
+    series_sum(line.size - s, get_series_round_count(line, s...c_idxs[i]))
   end.sum
 end
 
