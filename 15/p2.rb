@@ -18,6 +18,8 @@ def run_steps(steps)
   boxes = Array.new(256) { {} }
   steps.each do |step|
     label, h, foc_len_s = get_op(step)
+    # Ruby hash keys are sorted by insertion order, so, ordering is already
+    # taken care of
     if foc_len_s.nil?
       boxes[h].delete(label)
     else
