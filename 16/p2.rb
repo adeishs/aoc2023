@@ -45,6 +45,6 @@ run = lambda { |range_e, start, dir|
   (0..range_e).map { |c| count_energs.call(start.gsub('[]', c.to_s), dir) }.max
 }
 puts [
-  [['[]i', '1'], ["#{max_x}+[]i", '-1']].map { |s, d| run.call(max_y, s, d) },
-  [['[]', 'i'], ["[]+#{max_y}i", '-i']].map { |s, d| run.call(max_x, s, d) }
-].flatten.max
+  [max_y].product([['[]i', '1'], ["#{max_x}+[]i", '-1']]),
+  [max_x].product([['[]', 'i'], ["[]+#{max_y}i", '-i']])
+].map(&:flatten).map { |e, s, d| run.call(e, s, d) }.max
