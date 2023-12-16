@@ -41,9 +41,10 @@ count_energs = lambda { |start, dir|
 }
 max_x = tiles.first.size - 1
 max_y = tiles.size - 1
+run = lambda { |range_e, start, dir|
+  (0..range_e).map { |c| count_energs.call(start.gsub('[]', c.to_s), dir) }.max
+}
 puts [
-  (0..max_y).map { |y| count_energs.call("#{y}i", '1') },
-  (0..max_y).map { |y| count_energs.call("#{max_x}+#{y}i", '-1') },
-  (0..max_x).map { |x| count_energs.call(x.to_s, 'i') },
-  (0..max_x).map { |x| count_energs.call("#{x}+#{max_y}i", '-i') }
+  [['[]i', '1'], ["#{max_x}+[]i", '-1']].map { |s, d| run.call(max_y, s, d) },
+  [['[]', 'i'], ["[]+#{max_y}i", '-i']].map { |s, d| run.call(max_x, s, d) }
 ].flatten.max
