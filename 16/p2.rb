@@ -32,25 +32,18 @@ def run_beam(tiles, start, dir, energs)
   end
 end
 
-def count_energs(tiles, start, dir)
+tiles = $stdin.each_line
+              .map(&:chomp)
+count_energs = lambda { |start, dir|
   energs = {}
   run_beam(tiles, start, dir, energs)
   energs.size
-end
-
-tiles = $stdin.each_line
-              .map(&:chomp)
+}
+max_x = tiles.first.size - 1
+max_y = tiles.size - 1
 puts [
-  (0...tiles.size).map do |y|
-                    [
-                      count_energs(tiles, Complex(0, y), 1 + 0i),
-                      count_energs(tiles, Complex(tiles[0].size - 1, y), -1 + 0i),
-                    ].max
-  end.max,
-  (0...tiles[0].size).map do |x|
-                    [
-                      count_energs(tiles, Complex(x, 0), 0 + 1i),
-                      count_energs(tiles, Complex(x, tiles.size - 1), 0 + -1i),
-                    ].max
-  end.max
+  (0..max_y).map { |y| count_energs.call(Complex(0, y), 1 + 0i) }.max,
+  (0..max_y).map { |y| count_energs.call(Complex(max_x - 1, y), -1 + 0i) }.max,
+  (0..max_x).map { |x| count_energs.call(Complex(x, 0), 0 + 1i) }.max,
+  (0..max_x).map { |x| count_energs.call(Complex(x, max_y - 1), 0 + -1i) }.max
 ].max
