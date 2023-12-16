@@ -36,14 +36,14 @@ tiles = $stdin.each_line
               .map(&:chomp)
 count_energs = lambda { |start, dir|
   energs = {}
-  run_beam(tiles, start, dir, energs)
+  run_beam(tiles, Complex(start), Complex(dir), energs)
   energs.size
 }
 max_x = tiles.first.size - 1
 max_y = tiles.size - 1
 puts [
-  (0..max_y).map { |y| count_energs.call(Complex(0, y), 1 + 0i) }.max,
-  (0..max_y).map { |y| count_energs.call(Complex(max_x - 1, y), -1 + 0i) }.max,
-  (0..max_x).map { |x| count_energs.call(Complex(x, 0), 0 + 1i) }.max,
-  (0..max_x).map { |x| count_energs.call(Complex(x, max_y - 1), 0 + -1i) }.max
-].max
+  (0..max_y).map { |y| count_energs.call("#{y}i", '1') },
+  (0..max_y).map { |y| count_energs.call("#{max_x}+#{y}i", '-1') },
+  (0..max_x).map { |x| count_energs.call(x.to_s, 'i') },
+  (0..max_x).map { |x| count_energs.call("#{x}+#{max_y}i", '-i') }
+].flatten.max
