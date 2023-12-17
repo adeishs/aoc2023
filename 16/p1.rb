@@ -29,10 +29,7 @@ def run_beam(tiles, start, dir, energs)
 
     curr += dir
   end
+  energs.size
 end
 
-tiles = $stdin.each_line
-              .map(&:chomp)
-energs = {}
-run_beam(tiles, 0 + 0i, 1 + 0i, energs)
-puts energs.size
+puts run_beam($stdin.each_line.map(&:chomp), 0 + 0i, 1 + 0i, {})

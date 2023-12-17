@@ -29,21 +29,17 @@ def run_beam(tiles, start, dir, energs)
 
     curr += dir
   end
+  energs.size
 end
 
-tiles = $stdin.each_line
-              .map(&:chomp)
-count_energs = lambda { |start, dir|
-  energs = {}
-  run_beam(tiles, Complex(start), Complex(dir), energs)
-  energs.size
-}
+tiles = $stdin.each_line.map(&:chomp)
 max_x = tiles.first.size - 1
 max_y = tiles.size - 1
-run = lambda { |range_e, start, dir|
-  (0..range_e).map { |c| count_energs.call(start.gsub('[]', c.to_s), dir) }.max
-}
 puts [
   [max_y].product([['[]i', '1'], ["#{max_x}+[]i", '-1']]),
   [max_x].product([['[]', 'i'], ["[]+#{max_y}i", '-i']])
-].map(&:flatten).map { |e, s, d| run.call(e, s, d) }.max
+].map(&:flatten).map { |e, s, d|
+  (0..e).map do |c|
+    run_beam(tiles, Complex(s.sub('[]', c.to_s)), Complex(d), {})
+  end.max
+}.max
