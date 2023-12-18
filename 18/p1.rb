@@ -4,12 +4,11 @@
 require 'set'
 
 class Movement
-  attr_accessor :dir, :dist, :clr
+  attr_accessor :dir, :dist
 
-  def initialize(dir, dist, clr)
+  def initialize(dir, dist)
     @dir = dir
     @dist = dist
-    @clr = clr
   end
 end
 
@@ -20,12 +19,12 @@ DIR = {
   'D' => 0 + 1i
 }.freeze
 
-def crossed?(cube, halfpoint_coord, dir)
+def crossed?(cubes, halfpoint_coord, dir)
   top_coord = Complex(
     (halfpoint_coord.real + dir * 0.5).to_i,
     (halfpoint_coord.imag - 0.5).to_i
   )
-  !cube[top_coord].nil? && !cube[top_coord + DIR['D']].nil?
+  [0, DIR['D']].all? { |d| cubes.member?(top_coord + d) }
 end
 
 def inside?(plan, halfpoint_coord)
@@ -36,7 +35,7 @@ def inside?(plan, halfpoint_coord)
   )
   c = halfpoint_coord
   while dir == (wall.real <=> c.real)
-    inside = !inside if crossed?(plan[:cube], c, dir)
+    inside = !inside if crossed?(plan[:cubes], c, dir)
     c += dir
   end
 
@@ -66,22 +65,22 @@ def get_inside_coords(plan)
   halfpoint_coords = get_inside_halfpoints(plan)
   halfpoint_coords.select { |c| all_adjacent_halfpoints?(c, halfpoint_coords) }
                   .map { |c| Complex((c.real + 0.5).to_i, (c.imag + 0.5).to_i) }
-                  .select { |c| plan[:cube][c].nil? }
+                  .reject { |c| plan[:cubes].member?(c) }
 end
 
 def parse_line(line)
-  dir_str, dist_str, clr_str = line.split(' ')
-  Movement.new(DIR[dir_str], dist_str.to_i, clr_str[2, 6].to_i(16))
+  dir_str, dist_str, _ = line.split(' ')
+  Movement.new(DIR[dir_str], dist_str.to_i)
 end
 
 def construct_plan(steps)
-  cube = {}
+  cubes = Set.new
   curr = 0 + 0i
   min_x = min_y = Float::INFINITY
   max_x = max_y = -Float::INFINITY
   steps.each do |step|
     step.dist.times do
-      cube[curr] = step.clr
+      cubes << curr
       min_x = [min_x, curr.real].min
       max_x = [curr.real, max_x].max
       min_y = [min_y, curr.imag].min
@@ -90,7 +89,7 @@ def construct_plan(steps)
     end
   end
   {
-    cube: cube,
+    cubes: cubes,
     min_x: min_x,
     max_x: max_x,
     min_y: min_y,
@@ -99,4 +98,4 @@ def construct_plan(steps)
 end
 
 plan = construct_plan($stdin.each_line.map { |l| parse_line(l) })
-puts get_inside_coords(plan).size + plan[:cube].size
+puts get_inside_coords(plan).size + plan[:cubes].size
